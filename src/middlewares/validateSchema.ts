@@ -13,7 +13,7 @@ export const validateSchema = (schema: AnyZodObject) => {
         try {
             // Validate request body
             await schema.parseAsync(req.body);
-            next();
+            return next();
         } catch (error) {
             if (error instanceof ZodError) {
                 // Format validation errors
@@ -30,7 +30,7 @@ export const validateSchema = (schema: AnyZodObject) => {
             }
 
             // Pass other errors to error handler
-            next(error);
+            return next(error);
         }
     };
 };

@@ -160,7 +160,7 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
  * Logout user
  * POST /api/users/logout
  */
-export const logout = catchError(async (req: Request, res: Response) => {
+export const logout = catchError(async (_req: Request, res: Response) => {
     // Clear cookie
     res.clearCookie('token');
 

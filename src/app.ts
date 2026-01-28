@@ -18,7 +18,7 @@ app.use(
 );
 
 // Health check route
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
     res.status(200).json({
         success: true,
         message: 'Server is running',
@@ -29,11 +29,20 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.use('/api', mainRouter);
 
-// 404 handler
-app.use((req: Request, res: Response) => {
+// 404 handler      
+app.use((_req: Request, res: Response) => {
     res.status(404).json({
         success: false,
         message: 'Route not found',
+    });
+});
+
+// Error handler
+app.use((err: Error, _req: Request, res: Response) => {
+    console.error(err.stack);
+    res.status(500).json({
+        success: false,
+        message: 'Something went wrong',
     });
 });
 
