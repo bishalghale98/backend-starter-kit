@@ -1,31 +1,39 @@
 import nodemailer from 'nodemailer';
 import { logger } from '../config/logger';
 
-// Email configuration
-const transporter = nodemailer.createTransport({
+// Email configuration - only create if SMTP credentials are provided
+const isEmailConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
+
+let transporter: nodemailer.Transporter | null = null;
+
+if (isEmailConfigured) {
+  transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
-});
+  });
 
-// Verify transporter configuration
-transporter.verify((error) => {
+  // Verify transporter configuration
+  transporter.verify((error) => {
     if (error) {
-        logger.warn('Email service not configured properly', error);
+      logger.warn('Email service not configured properly', error);
     } else {
-        logger.success('Email service is ready');
+      logger.success('Email service is ready');
     }
-});
+  });
+} else {
+  logger.warn('Email service disabled - SMTP credentials not provided');
+}
 
 interface EmailOptions {
-    to: string;
-    subject: string;
-    html: string;
-    text?: string;
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
 }
 
 /**
@@ -33,21 +41,26 @@ interface EmailOptions {
  * @param options - Email options (to, subject, html, text)
  */
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
-    try {
-        const mailOptions = {
-            from: `"${process.env.SMTP_FROM_NAME || 'Backend Starter Kit'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
-            to: options.to,
-            subject: options.subject,
-            html: options.html,
-            text: options.text,
-        };
-
-        const info = await transporter.sendMail(mailOptions);
-        logger.info(`Email sent to ${options.to}`, { messageId: info.messageId });
-    } catch (error) {
-        logger.error('Failed to send email', error);
-        throw new Error('Failed to send email');
+  try {
+    if (!transporter) {
+      logger.warn('Email service not configured - skipping email send');
+      return;
     }
+
+    const mailOptions = {
+      from: `"${process.env.SMTP_FROM_NAME || 'Backend Starter Kit'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    logger.info(`Email sent to ${options.to}`, { messageId: info.messageId });
+  } catch (error) {
+    logger.error('Failed to send email', error);
+    throw new Error('Failed to send email');
+  }
 };
 
 /**
@@ -56,7 +69,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
  * @param name - User name
  */
 export const sendWelcomeEmail = async (to: string, name: string): Promise<void> => {
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -89,12 +102,12 @@ export const sendWelcomeEmail = async (to: string, name: string): Promise<void> 
     </html>
   `;
 
-    await sendEmail({
-        to,
-        subject: 'Welcome to Our Platform!',
-        html,
-        text: `Hi ${name}, Thank you for registering with us! Your account has been successfully created.`,
-    });
+  await sendEmail({
+    to,
+    subject: 'Welcome to Our Platform!',
+    html,
+    text: `Hi ${name}, Thank you for registering with us! Your account has been successfully created.`,
+  });
 };
 
 /**
@@ -104,13 +117,13 @@ export const sendWelcomeEmail = async (to: string, name: string): Promise<void> 
  * @param resetToken - Password reset token
  */
 export const sendPasswordResetEmail = async (
-    to: string,
-    name: string,
-    resetToken: string
+  to: string,
+  name: string,
+  resetToken: string
 ): Promise<void> => {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -149,10 +162,10 @@ export const sendPasswordResetEmail = async (
     </html>
   `;
 
-    await sendEmail({
-        to,
-        subject: 'Password Reset Request',
-        html,
-        text: `Hi ${name}, Click this link to reset your password: ${resetUrl}. This link expires in 1 hour.`,
-    });
+  await sendEmail({
+    to,
+    subject: 'Password Reset Request',
+    html,
+    text: `Hi ${name}, Click this link to reset your password: ${resetUrl}. This link expires in 1 hour.`,
+  });
 };

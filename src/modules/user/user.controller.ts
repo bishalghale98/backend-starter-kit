@@ -40,29 +40,6 @@ export const register = catchError(async (req: Request, res: Response) => {
         logger.error('Failed to send welcome email', error);
     });
 
-    // Generate JWT tokens
-    const accessToken = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-    });
-
-    const refreshToken = generateRefreshToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-    });
-
-    // Store refresh token
-    await storeRefreshToken(user.id, refreshToken);
-
-    // Set HTTP-only cookie for access token
-    res.cookie('token', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
-    });
 
     // Send response
     res.status(201).json({
@@ -74,7 +51,6 @@ export const register = catchError(async (req: Request, res: Response) => {
             email: user.email,
             role: user.role,
             createdAt: user.createdAt,
-            refreshToken // Send refresh token in response
         },
     });
 });

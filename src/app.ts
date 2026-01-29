@@ -12,6 +12,10 @@ import mainRouter from './routes';
 // Create Express application
 const app: Application = express();
 
+// Trust proxy - MUST be set before rate limiting
+// Required for Render, Heroku, and other reverse proxies
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet()); // Set security HTTP headers
 app.use(
