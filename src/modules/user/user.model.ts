@@ -28,7 +28,7 @@ export const createUser = async (data: {
  * @returns User object or null
  */
 export const findUserByEmail = async (email: string): Promise<User | null> => {
-    return await prisma.user.findUnique({
+    return await prisma.user.findFirst({
         where: { email },
     });
 };
