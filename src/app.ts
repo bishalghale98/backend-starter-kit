@@ -8,11 +8,8 @@ import { setupSwagger } from './config/swagger';
 import { apiLimiter } from './middlewares/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import mainRouter from './routes';
-import dns from 'dns';
 
-// Set DNS resolution to prefer IPv4 addresses
-// This helps avoid connection issues in environments where IPv6 is not properly configured
-dns.setDefaultResultOrder('ipv4first');
+
 
 // Create Express application
 const app: Application = express();
