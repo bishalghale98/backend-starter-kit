@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { env } from './config/env';
 import { logger } from './config/logger';
+import { setupSwagger } from './config/swagger';
 import { apiLimiter } from './middlewares/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import mainRouter from './routes';
@@ -34,6 +35,33 @@ app.use((req: Request, _res: Response, next) => {
     next();
 });
 
+// Swagger API Documentation
+setupSwagger(app);
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check endpoint
+ *     description: Returns server health status
+ *     responses:
+ *       200:
+ *         description: Server is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 timestamp:
+ *                   type: string
+ *                 environment:
+ *                   type: string
+ */
 // Health check route
 app.get('/health', (_req: Request, res: Response) => {
     res.status(200).json({

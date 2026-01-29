@@ -18,6 +18,10 @@ A production-ready Node.js backend starter kit with Express, TypeScript, Prisma 
 - **Environment Validation** - Startup validation of required env variables
 - **Structured Logging** - Color-coded logger with timestamps and log levels
 - **Soft Delete** - Built-in soft delete support in database schema
+- **Unit Testing** - Jest + Supertest for comprehensive testing
+- **API Documentation** - Swagger/OpenAPI 3.0 interactive docs
+- **Email Service** - Nodemailer with HTML templates
+- **Password Reset** - Complete forgot/reset password flow
 
 
 ## 📁 Project Structure
@@ -43,11 +47,15 @@ backend-starter-kit/
 │   │       ├── user.route.ts
 │   │       ├── user.controller.ts
 │   │       ├── user.schema.ts
-│   │       └── user.model.ts
+│   │       ├── user.model.ts
+│   │       ├── user.passwordReset.controller.ts
+│   │       ├── user.passwordReset.model.ts
+│   │       └── user.passwordReset.schema.ts
 │   ├── routes/
 │   │   └── index.ts         # Main router
 │   ├── services/
-│   │   └── catchError.ts    # Error wrapper
+│   │   ├── catchError.ts    # Error wrapper
+│   │   └── email.service.ts # Email sending service
 │   ├── utils/
 │   │   └── token.util.ts    # JWT utilities
 │   └── types/
@@ -103,23 +111,44 @@ backend-starter-kit/
 
 The server will start on `http://localhost:5000`
 
-## 📚 API Endpoints
+## 📚 API Documentation
 
-### Base URL
-All API endpoints are prefixed with `/api/v1`
+Interactive API documentation is available at `/api-docs` when the server is running.
 
-### User Module
+Visit: `http://localhost:5000/api-docs`
 
-#### Register User
-```http
+## 🔌 API Endpoints
+
+Base URL: `/api/v1`
+
+### Health Check
+```bash
+GET /health
+```
+
+### User Authentication
+```bash
+# Register new user
 POST /api/v1/users/register
-Content-Type: application/json
+Body: { "name": "John Doe", "email": "john@example.com", "password": "password123" }
 
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123"
-}
+# Login
+POST /api/v1/users/login
+Body: { "email": "john@example.com", "password": "password123" }
+
+# Get profile (requires authentication)
+GET /api/v1/users/profile
+
+# Logout (requires authentication)
+POST /api/v1/users/logout
+
+# Request password reset
+POST /api/v1/users/forgot-password
+Body: { "email": "john@example.com" }
+
+# Reset password
+POST /api/v1/users/reset-password
+Body: { "token": "reset-token", "newPassword": "newpassword123" }
 ```
 
 **Response:**

@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt';
 import { createUser, findUserByEmail, findUserById } from './user.model';
 import { generateToken } from '../../utils/token.util';
 import { catchError } from '../../services/catchError';
+import { sendWelcomeEmail } from '../../services/email.service';
+import { logger } from '../../config/logger';
 
 /**
  * Register a new user
@@ -29,6 +31,11 @@ export const register = catchError(async (req: Request, res: Response) => {
         name,
         email,
         password: hashedPassword,
+    });
+
+    // Send welcome email (async, don't block response)
+    sendWelcomeEmail(user.email, user.name).catch((error) => {
+        logger.error('Failed to send welcome email', error);
     });
 
     // Generate JWT token
@@ -112,6 +119,7 @@ export const login = catchError(async (req: Request, res: Response) => {
             email: user.email,
             role: user.role,
             createdAt: user.createdAt,
+            token,
         },
     });
 });
