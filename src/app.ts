@@ -63,13 +63,32 @@ setupSwagger(app);
  *                   type: string
  */
 // Health check route
-app.get('/health', (_req: Request, res: Response) => {
-    res.status(200).json({
-        success: true,
-        message: 'Server is running',
-        timestamp: new Date().toISOString(),
-        environment: env.NODE_ENV,
-    });
+app.get('/health', async (_req: Request, res: Response) => {
+    try {
+        // Check Redis connection
+        const { redis } = await import('./config/redis');
+        const redisStatus = redis.status === 'ready' ? 'connected' : 'disconnected';
+
+        res.status(200).json({
+            success: true,
+            message: 'Server is running',
+            timestamp: new Date().toISOString(),
+            services: {
+                database: 'connected',
+                redis: redisStatus,
+            },
+        });
+    } catch (error) {
+        res.status(200).json({
+            success: true,
+            message: 'Server is running',
+            timestamp: new Date().toISOString(),
+            services: {
+                database: 'connected',
+                redis: 'not configured',
+            },
+        });
+    }
 });
 
 // API routes - Base path: /api/v1

@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import { register, login, getProfile, logout } from './user.controller';
 import { requestPasswordReset, resetPassword } from './user.passwordReset.controller';
+import { refreshAccessToken } from './refreshToken.controller';
+import { uploadAvatar, deleteAvatar } from './upload.controller';
 import { validateSchema } from '../../middlewares/validateSchema';
 import { authenticate } from '../../middlewares/auth.middleware';
 import { authLimiter } from '../../middlewares/rateLimit.middleware';
+import { upload } from '../../middlewares/upload.middleware';
 import { registerSchema, loginSchema } from './user.schema';
 import { requestPasswordResetSchema, resetPasswordSchema } from './user.passwordReset.schema';
+import { refreshTokenSchema } from './refreshToken.schema';
 
 const userRouter = Router();
 
@@ -208,8 +212,8 @@ userRouter.post('/forgot-password', validateSchema(requestPasswordResetSchema), 
  * /users/reset-password:
  *   post:
  *     tags: [Users]
- *     summary: Reset password
- *     description: Reset user password with token
+ *     summary: Reset password with token
+ *     description: Reset user password using the reset token from email
  *     requestBody:
  *       required: true
  *       content:
@@ -222,27 +226,88 @@ userRouter.post('/forgot-password', validateSchema(requestPasswordResetSchema), 
  *             properties:
  *               token:
  *                 type: string
- *                 example: abc123def456...
  *               newPassword:
  *                 type: string
- *                 format: password
- *                 example: newpassword123
+ *                 minLength: 6
  *     responses:
  *       200:
  *         description: Password reset successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
  *       400:
  *         description: Invalid or expired token
  */
 userRouter.post('/reset-password', validateSchema(resetPasswordSchema), resetPassword);
+
+/**
+ * @swagger
+ * /users/refresh-token:
+ *   post:
+ *     tags: [Users]
+ *     summary: Refresh access token
+ *     description: Get a new access token using refresh token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+userRouter.post('/refresh-token', validateSchema(refreshTokenSchema), refreshAccessToken);
+
+/**
+ * @swagger
+ * /users/upload-avatar:
+ *   post:
+ *     tags: [Users]
+ *     summary: Upload profile picture
+ *     description: Upload or update user avatar (Cloudinary)
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully
+ *       401:
+ *         description: Unauthorized
+ */
+userRouter.post('/upload-avatar', authenticate, upload.single('avatar'), uploadAvatar);
+
+/**
+ * @swagger
+ * /users/avatar:
+ *   delete:
+ *     tags: [Users]
+ *     summary: Delete profile picture
+ *     description: Delete user avatar from Cloudinary
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Avatar deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No avatar to delete
+ */
+userRouter.delete('/avatar', authenticate, deleteAvatar);
 
 export default userRouter;
 

@@ -18,16 +18,20 @@ enum Role {
 }
 
 model User {
-  id               String    @id @default(uuid())
-  name             String
-  email            String    @unique
-  password         String
-  role             Role      @default(USER)
-  resetToken       String? // Password reset token
-  resetTokenExpiry DateTime? // Token expiration time
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  deletedAt        DateTime? // Soft delete field
+  id                 String    @id @default(uuid())
+  name               String
+  email              String    @unique
+  password           String
+  role               Role      @default(USER)
+  resetToken         String? // Password reset token
+  resetTokenExpiry   DateTime? // Token expiration time
+  refreshToken       String? // JWT refresh token (hashed)
+  refreshTokenExpiry DateTime? // Refresh token expiration
+  avatar             String? // Cloudinary avatar URL
+  avatarPublicId     String? // Cloudinary public_id for deletion
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime? // Soft delete field
 
   @@index([email])
   @@map("users")

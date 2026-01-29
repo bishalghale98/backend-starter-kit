@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { createUser, findUserByEmail, findUserById } from './user.model';
-import { generateToken } from '../../utils/token.util';
+import { generateToken, generateRefreshToken } from '../../utils/token.util';
 import { catchError } from '../../services/catchError';
 import { sendWelcomeEmail } from '../../services/email.service';
 import { logger } from '../../config/logger';
+import { CacheService } from '../../services/cache.service';
+import { storeRefreshToken } from './refreshToken.model';
 
 /**
  * Register a new user
@@ -38,19 +40,28 @@ export const register = catchError(async (req: Request, res: Response) => {
         logger.error('Failed to send welcome email', error);
     });
 
-    // Generate JWT token
-    const token = generateToken({
+    // Generate JWT tokens
+    const accessToken = generateToken({
         id: user.id,
         email: user.email,
         role: user.role,
     });
 
-    // Set HTTP-only cookie
-    res.cookie('token', token, {
+    const refreshToken = generateRefreshToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+    });
+
+    // Store refresh token
+    await storeRefreshToken(user.id, refreshToken);
+
+    // Set HTTP-only cookie for access token
+    res.cookie('token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     // Send response
@@ -63,6 +74,7 @@ export const register = catchError(async (req: Request, res: Response) => {
             email: user.email,
             role: user.role,
             createdAt: user.createdAt,
+            refreshToken, // Send refresh token in response
         },
     });
 });
@@ -140,7 +152,20 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
         return;
     }
 
-    // Get user from database
+    // Check cache first
+    const cacheKey = CacheService.generateKey('user:profile', userId);
+    const cachedUser = await CacheService.get(cacheKey);
+
+    if (cachedUser) {
+        res.setHeader('X-Cache', 'HIT');
+        res.status(200).json({
+            success: true,
+            data: cachedUser,
+        });
+        return;
+    }
+
+    // Find user by ID
     const user = await findUserById(userId);
 
     if (!user) {
@@ -151,16 +176,23 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
         return;
     }
 
-    // Send response (exclude password)
+    // Prepare user data (exclude password)
+    const userData = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+    };
+
+    // Cache user profile for 5 minutes
+    await CacheService.set(cacheKey, userData, 300);
+
+    // Send response
+    res.setHeader('X-Cache', 'MISS');
     res.status(200).json({
         success: true,
-        data: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            createdAt: user.createdAt,
-        },
+        data: userData,
     });
 });
 
