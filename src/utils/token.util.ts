@@ -17,8 +17,11 @@ export interface TokenPayload {
  * @returns JWT access token
  */
 export const generateToken = (payload: TokenPayload): string => {
-    const expiresIn: string = process.env.ACCESS_TOKEN_EXPIRY || '15m';
-    return jwt.sign(payload, env.JWT_SECRET, { expiresIn });
+    return jwt.sign(
+        payload,
+        env.JWT_SECRET,
+        { expiresIn: (process.env.ACCESS_TOKEN_EXPIRY || '15m') as any }
+    );
 };
 
 /**
@@ -27,8 +30,11 @@ export const generateToken = (payload: TokenPayload): string => {
  * @returns JWT refresh token
  */
 export const generateRefreshToken = (payload: TokenPayload): string => {
-    const expiresIn: string = process.env.REFRESH_TOKEN_EXPIRY || '7d';
-    return jwt.sign(payload, env.JWT_SECRET, { expiresIn });
+    return jwt.sign(
+        payload,
+        env.JWT_SECRET,
+        { expiresIn: (process.env.REFRESH_TOKEN_EXPIRY || '7d') as any }
+    );
 };
 
 /**

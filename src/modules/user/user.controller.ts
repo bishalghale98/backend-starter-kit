@@ -6,7 +6,7 @@ import { catchError } from '../../services/catchError';
 import { sendWelcomeEmail } from '../../services/email.service';
 import { logger } from '../../config/logger';
 import { CacheService } from '../../services/cache.service';
-import { storeRefreshToken } from './refreshToken.model';
+import { clearRefreshToken, storeRefreshToken } from './refreshToken.model';
 
 /**
  * Register a new user
@@ -74,7 +74,7 @@ export const register = catchError(async (req: Request, res: Response) => {
             email: user.email,
             role: user.role,
             createdAt: user.createdAt,
-            refreshToken, // Send refresh token in response
+            refreshToken // Send refresh token in response
         },
     });
 });
@@ -106,19 +106,28 @@ export const login = catchError(async (req: Request, res: Response) => {
         return;
     }
 
-    // Generate JWT token
-    const token = generateToken({
+    // Generate JWT tokens
+    const accessToken = generateToken({
         id: user.id,
         email: user.email,
         role: user.role,
     });
 
-    // Set HTTP-only cookie
-    res.cookie('token', token, {
+    const refreshToken = generateRefreshToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+    });
+
+    // Store refresh token
+    await storeRefreshToken(user.id, refreshToken);
+
+    // Set HTTP-only cookie for access token
+    res.cookie('token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     // Send response
@@ -131,7 +140,8 @@ export const login = catchError(async (req: Request, res: Response) => {
             email: user.email,
             role: user.role,
             createdAt: user.createdAt,
-            token,
+            accessToken,
+            refreshToken,
         },
     });
 });
@@ -203,6 +213,7 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
 export const logout = catchError(async (_req: Request, res: Response) => {
     // Clear cookie
     res.clearCookie('token');
+    clearRefreshToken(_req.user?.id as string);
 
     res.status(200).json({
         success: true,

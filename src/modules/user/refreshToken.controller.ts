@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { findUserByRefreshToken, storeRefreshToken, clearRefreshToken } from './refreshToken.model';
+import { findUserByRefreshToken, storeRefreshToken } from './refreshToken.model';
 import { generateToken, generateRefreshToken, verifyToken } from '../../utils/token.util';
 import { catchError } from '../../services/catchError';
 import { CacheService } from '../../services/cache.service';

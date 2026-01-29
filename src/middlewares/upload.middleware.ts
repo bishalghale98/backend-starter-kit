@@ -8,7 +8,7 @@ import { Request } from 'express';
  */
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: async (req: Request, file: Express.Multer.File) => {
+    params: async (_req: Request, _file: Express.Multer.File) => {
         return {
             folder: process.env.CLOUDINARY_FOLDER || 'backend-starter-kit/avatars',
             allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
@@ -24,7 +24,7 @@ const storage = new CloudinaryStorage({
 /**
  * File filter to validate file types
  */
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     // Accept images only
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
