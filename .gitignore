@@ -24,3 +24,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+
+# Render
+RENDER_ENV_UPDATE_REQUIRED.md
