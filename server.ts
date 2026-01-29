@@ -1,11 +1,7 @@
-import dotenv from 'dotenv';
+import { env } from './src/config/env';
+import { logger } from './src/config/logger';
 import app from './src/app';
 import { connectDB } from './src/config/dbConnect';
-
-// Load environment variables
-dotenv.config();
-
-const PORT = process.env.PORT || 5000;
 
 // Start server
 const startServer = async () => {
@@ -14,15 +10,16 @@ const startServer = async () => {
         await connectDB();
 
         // Start Express server
-        app.listen(PORT, () => {
-            console.log(`🚀 Server is running on port ${PORT}`);
-            console.log(`📍 Health check: http://localhost:${PORT}/health`);
-            console.log(`📍 API base URL: http://localhost:${PORT}/api`);
+        app.listen(env.PORT, () => {
+            logger.success(`Server is running on port ${env.PORT}`);
+            logger.info(`Health check: http://localhost:${env.PORT}/health`);
+            logger.info(`API base URL: http://localhost:${env.PORT}/api/v1`);
         });
     } catch (error) {
-        console.error('❌ Failed to start server:', error);
+        logger.error('Failed to start server', error);
         process.exit(1);
     }
 };
 
 startServer();
+

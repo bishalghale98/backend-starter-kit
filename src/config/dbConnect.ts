@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { logger } from './logger';
 
 // Create PostgreSQL connection pool
 const pool = new Pool({
@@ -29,9 +30,9 @@ if (process.env.NODE_ENV !== 'production') {
 export const connectDB = async (): Promise<void> => {
     try {
         await prisma.$connect();
-        console.log('✅ Database connected successfully');
+        logger.success('Database connected successfully');
     } catch (error) {
-        console.error('❌ Database connection failed:', error);
+        logger.error('Database connection failed', error);
         process.exit(1);
     }
 };

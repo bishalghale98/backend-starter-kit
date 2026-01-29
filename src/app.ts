@@ -1,21 +1,38 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { env } from './config/env';
+import { logger } from './config/logger';
+import { apiLimiter } from './middlewares/rateLimit.middleware';
+import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import mainRouter from './routes';
 
 // Create Express application
 const app: Application = express();
 
-// Middlewares
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(cookieParser()); // Parse cookies
+// Security Middlewares
+app.use(helmet()); // Set security HTTP headers
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        origin: env.CORS_ORIGIN,
         credentials: true, // Allow cookies to be sent
     })
 );
+
+// Body Parsing Middlewares
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cookieParser()); // Parse cookies
+
+// Rate Limiting
+app.use(apiLimiter); // Apply rate limiting to all routes
+
+// Request Logging Middleware
+app.use((req: Request, _res: Response, next) => {
+    logger.info(`${req.method} ${req.path}`);
+    next();
+});
 
 // Health check route
 app.get('/health', (_req: Request, res: Response) => {
@@ -23,28 +40,19 @@ app.get('/health', (_req: Request, res: Response) => {
         success: true,
         message: 'Server is running',
         timestamp: new Date().toISOString(),
+        environment: env.NODE_ENV,
     });
 });
 
-// API routes
-app.use('/api', mainRouter);
+// API routes - Base path: /api/v1
+app.use('/api/v1', mainRouter);
 
-// 404 handler      
-app.use((_req: Request, res: Response) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route not found',
-    });
-});
+// 404 handler - Must be after all routes
+app.use(notFoundHandler);
 
-// Error handler
-app.use((err: Error, _req: Request, res: Response) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Something went wrong',
-    });
-});
+// Error handler - Must be last
+app.use(errorHandler);
 
 // Export app (do not call listen here)
 export default app;
+

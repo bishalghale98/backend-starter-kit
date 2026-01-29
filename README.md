@@ -6,13 +6,19 @@ A production-ready Node.js backend starter kit with Express, TypeScript, Prisma 
 
 - **TypeScript** - Type-safe development
 - **Express.js** - Fast, minimalist web framework
-- **Prisma ORM** - Modern database toolkit
+- **Prisma ORM** - Modern database toolkit with PostgreSQL adapter
 - **PostgreSQL** - Powerful relational database
 - **JWT Authentication** - Secure token-based auth with HTTP-only cookies
-- **Zod Validation** - Runtime type validation
+- **Zod Validation** - Runtime type validation for all inputs
 - **Modular Architecture** - Feature-based folder structure
 - **Clean Separation** - Controllers, models, routes, and services
-- **Error Handling** - Centralized async error wrapper
+- **Error Handling** - Centralized async error wrapper and error middleware
+- **Security** - Helmet for HTTP headers, CORS, rate limiting
+- **Rate Limiting** - Prevent brute force attacks and API abuse
+- **Environment Validation** - Startup validation of required env variables
+- **Structured Logging** - Color-coded logger with timestamps and log levels
+- **Soft Delete** - Built-in soft delete support in database schema
+
 
 ## 📁 Project Structure
 
@@ -24,10 +30,14 @@ backend-starter-kit/
 ├── src/
 │   ├── app.ts               # Express app configuration
 │   ├── config/
-│   │   └── dbConnect.ts     # Database connection
+│   │   ├── dbConnect.ts     # Database connection (Prisma singleton)
+│   │   ├── env.ts           # Environment validation
+│   │   └── logger.ts        # Structured logging utility
 │   ├── middlewares/
-│   │   ├── auth.middleware.ts
-│   │   └── validateSchema.ts
+│   │   ├── auth.middleware.ts      # JWT authentication
+│   │   ├── error.middleware.ts     # Centralized error handling
+│   │   ├── rateLimit.middleware.ts # Rate limiting
+│   │   └── validateSchema.ts       # Zod validation
 │   ├── modules/
 │   │   └── user/            # User module (template)
 │   │       ├── user.route.ts
@@ -43,10 +53,12 @@ backend-starter-kit/
 │   └── types/
 │       └── index.ts         # TypeScript types
 ├── .env                      # Environment variables
+├── .env.example              # Environment template
 ├── package.json
 ├── tsconfig.json
 └── nodemon.json
 ```
+
 
 ## 🛠️ Installation
 
@@ -93,11 +105,14 @@ The server will start on `http://localhost:5000`
 
 ## 📚 API Endpoints
 
+### Base URL
+All API endpoints are prefixed with `/api/v1`
+
 ### User Module
 
 #### Register User
 ```http
-POST /api/users/register
+POST /api/v1/users/register
 Content-Type: application/json
 
 {
@@ -124,7 +139,7 @@ Content-Type: application/json
 
 #### Login
 ```http
-POST /api/users/login
+POST /api/v1/users/login
 Content-Type: application/json
 
 {
@@ -150,7 +165,7 @@ Content-Type: application/json
 
 #### Get Profile (Protected)
 ```http
-GET /api/users/profile
+GET /api/v1/users/profile
 Cookie: token=<jwt_token>
 ```
 
@@ -170,7 +185,7 @@ Cookie: token=<jwt_token>
 
 #### Logout (Protected)
 ```http
-POST /api/users/logout
+POST /api/v1/users/logout
 Cookie: token=<jwt_token>
 ```
 
@@ -181,6 +196,7 @@ Cookie: token=<jwt_token>
   "message": "Logout successful"
 }
 ```
+
 
 ## 🔧 Available Scripts
 
@@ -243,11 +259,20 @@ Follow the user module pattern to add new features:
 
 ## 🔐 Security Features
 
-- **Password Hashing** - bcrypt with salt rounds
-- **JWT Tokens** - Secure token generation
+- **Password Hashing** - bcrypt with salt rounds (10)
+- **JWT Tokens** - Secure token generation and verification
 - **HTTP-only Cookies** - Prevents XSS attacks
-- **Input Validation** - Zod schema validation
+- **Helmet** - Sets secure HTTP headers (XSS protection, HSTS, etc.)
 - **CORS Configuration** - Controlled cross-origin requests
+- **Rate Limiting** - Multiple tiers:
+  - API limiter: 100 requests per 15 minutes
+  - Auth limiter: 5 attempts per 15 minutes (prevents brute force)
+  - General limiter: 30 requests per minute
+- **Input Validation** - Zod schema validation on all inputs
+- **Environment Validation** - Required variables checked at startup
+- **Centralized Error Handling** - Prevents information leakage
+- **Soft Delete** - Data retention with deletedAt field
+
 
 ## 🗄️ Database
 
@@ -255,10 +280,13 @@ This starter kit uses PostgreSQL with Prisma ORM. The User model includes:
 
 - `id` - UUID primary key
 - `name` - User's full name
-- `email` - Unique email address
+- `email` - Unique email address (indexed for performance)
 - `password` - Hashed password
 - `role` - Enum (ADMIN, USER)
 - `createdAt` - Timestamp
+- `updatedAt` - Auto-updated timestamp
+- `deletedAt` - Soft delete timestamp (nullable)
+
 
 ## 📝 Environment Variables
 
