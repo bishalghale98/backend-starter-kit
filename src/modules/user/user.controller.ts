@@ -102,7 +102,7 @@ export const login = catchError(async (req: Request, res: Response) => {
     res.cookie('token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
         maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
