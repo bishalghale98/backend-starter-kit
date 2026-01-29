@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx nodemon",
     "build": "tsc",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
