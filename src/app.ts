@@ -2,7 +2,6 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import { env } from './config/env';
 import { logger } from './config/logger';
 import { setupSwagger } from './config/swagger';
 import { apiLimiter } from './middlewares/rateLimit.middleware';
