@@ -13,7 +13,6 @@ interface EnvConfig {
     DATABASE_URL: string;
     JWT_SECRET: string;
     NODE_ENV: 'development' | 'production' | 'test';
-    CORS_ORIGIN: string;
     ACCESS_TOKEN_EXPIRY: string;
     REFRESH_TOKEN_EXPIRY: string;
 }
@@ -38,7 +37,6 @@ const validateEnv = (): EnvConfig => {
         DATABASE_URL: process.env.DATABASE_URL!,
         JWT_SECRET: process.env.JWT_SECRET!,
         NODE_ENV: (process.env.NODE_ENV as EnvConfig['NODE_ENV']) || 'development',
-        CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
         ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
         REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
     };
@@ -50,6 +48,5 @@ export const env = validateEnv();
 // Log environment info (without sensitive data)
 console.log('🔧 Environment:', env.NODE_ENV);
 console.log('🌐 Port:', env.PORT);
-console.log('🔗 CORS Origin:', env.CORS_ORIGIN);
 console.log('🔑 Access Token Expiry:', env.ACCESS_TOKEN_EXPIRY);
 console.log('🔑 Refresh Token Expiry:', env.REFRESH_TOKEN_EXPIRY);
