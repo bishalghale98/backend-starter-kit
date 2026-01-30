@@ -21,9 +21,21 @@ app.set('trust proxy', 1);
 
 // Security Middlewares
 app.use(helmet()); // Set security HTTP headers
+
+const allowedOrigins = [
+    env.CORS_ORIGIN,
+];
+
 app.use(
     cors({
-        origin: env.CORS_ORIGIN,
+        origin: function (origin, callback) {
+            // allow requests with no origin (like Postman)
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
         credentials: true, // Allow cookies to be sent
     })
 );

@@ -20,7 +20,7 @@ export const generateToken = (payload: TokenPayload): string => {
     return jwt.sign(
         payload,
         env.JWT_SECRET,
-        { expiresIn: (process.env.ACCESS_TOKEN_EXPIRY || '15m') as any }
+        { expiresIn: (env.ACCESS_TOKEN_EXPIRY || '15m') as any }
     );
 };
 
