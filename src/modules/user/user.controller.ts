@@ -96,14 +96,18 @@ export const login = catchError(async (req: Request, res: Response) => {
      * 5. SET COOKIE
      * domain allows subdomains (app + api)
      */
-    res.cookie("accessToken", accessToken, {
+    process.env.NODE_ENV === "production" ? res.cookie("accessToken", accessToken, {
         httpOnly: true, // JS can't read it
         secure: true, // HTTPS only
         sameSite: "none", // cross-site allowed
         domain: ".dineshbudhathoki1.com.np", // share across subdomains
         maxAge: 15 * 60 * 1000, // 15 minutes
+    }) : res.cookie("accessToken", accessToken, {
+        httpOnly: true, // JS can't read it
+        secure: false, // HTTPS only
+        sameSite: "lax", // cross-site allowed
+        maxAge: 15 * 60 * 1000, // 15 minutes
     });
-
     // 6. Send response (NO TOKEN IN BODY)
     res.status(200).json({
         success: true,
@@ -191,12 +195,19 @@ export const logout = catchError(async (_req: Request, res: Response) => {
     /**
      * MUST MATCH SAME OPTIONS AS res.cookie
      */
-    res.clearCookie("accessToken", {
+
+    process.env.NODE_ENV === "production" ? res.clearCookie("accessToken", {
         httpOnly: true,
         secure: true,
         sameSite: "none",
         domain: ".dineshbudhathoki1.com.np",
+    }) : res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        domain: '',
     });
+
 
     res.status(200).json({
         success: true,
