@@ -13,7 +13,7 @@ export const authenticate = async (
 ): Promise<void> => {
     try {
         // Get token from cookie
-        const token = req.cookies?.token;
+        const token = req.cookies?.accessToken;
 
         if (!token) {
             res.status(401).json({
