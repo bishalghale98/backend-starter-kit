@@ -63,10 +63,11 @@ export const refreshAccessToken = catchError(async (req: Request, res: Response)
     await CacheService.delete(cacheKey);
 
     // Set new access token in cookie
-    res.cookie('token', newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+    res.cookie("accessToken", newAccessToken, {
+        httpOnly: true, // JS can't read it
+        secure: true, // HTTPS only
+        sameSite: "none", // cross-site allowed
+        domain: ".dineshbudhathoki1.com.np", // share across subdomains
         maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
