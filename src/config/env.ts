@@ -15,6 +15,7 @@ interface EnvConfig {
     NODE_ENV: 'development' | 'production' | 'test';
     ACCESS_TOKEN_EXPIRY: string;
     REFRESH_TOKEN_EXPIRY: string;
+    CORS_ORIGIN: string[];
 }
 
 /**
@@ -39,6 +40,7 @@ const validateEnv = (): EnvConfig => {
         NODE_ENV: (process.env.NODE_ENV as EnvConfig['NODE_ENV']) || 'development',
         ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
         REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+        CORS_ORIGIN: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'https://app.dineshbudhathoki1.com.np'],
     };
 };
 

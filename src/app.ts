@@ -7,6 +7,7 @@ import { setupSwagger } from './config/swagger';
 import { apiLimiter } from './middlewares/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import mainRouter from './routes';
+import { env } from './config/env';
 
 
 
@@ -21,9 +22,11 @@ app.set('trust proxy', 1);
 // Security Middlewares
 app.use(helmet()); // Set security HTTP headers
 
+const origin = env.CORS_ORIGIN
+
 app.use(
     cors({
-        origin: "https://app.dineshbudhathoki1.com.np",
+        origin: origin,
         credentials: true, // Allow cookies to be sent
     })
 );
