@@ -23,7 +23,7 @@ app.use(helmet()); // Set security HTTP headers
 
 app.use(
     cors({
-        origin: "*",
+        origin: "https://app.dineshbudhathoki1.com.np",
         credentials: true, // Allow cookies to be sent
     })
 );
