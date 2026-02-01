@@ -99,7 +99,7 @@ export const login = catchError(async (req: Request, res: Response) => {
     await storeRefreshToken(user.id, refreshToken);
 
     // Set HTTP-only cookie for access token
-    res.cookie('token', accessToken, {
+    res.cookie('accessToken', accessToken, {
         httpOnly: true,
         secure: true,              // MUST be true on HTTPS
         sameSite: "none",          // REQUIRED for cross-site cookies
