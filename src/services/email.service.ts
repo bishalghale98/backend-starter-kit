@@ -27,14 +27,37 @@ if (isEmailConfigured) {
       },
     });
 
-    // Verify transporter configuration
-    transporter.verify((error) => {
-      if (error) {
-        logger.error('Email service verification failed', error);
-      } else {
-        logger.success('Email service is ready');
-      }
-    });
+    // Only verify in development to avoid cold start delays in serverless environments
+    if (process.env.NODE_ENV !== 'production') {
+      const verifyTransporter = async () => {
+        logger.info('Starting email service verification...');
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Email service verification timed out after 5000ms'));
+          }, 5000);
+
+          transporter!.verify((error) => {
+            clearTimeout(timeout);
+            if (error) {
+              reject(error);
+            } else {
+              resolve(true);
+            }
+          });
+        });
+      };
+
+      verifyTransporter()
+        .then(() => {
+          logger.success('Email service is ready');
+        })
+        .catch((error) => {
+          logger.error('Email service verification failed', error);
+        });
+    } else {
+      logger.info('Email service configured (skip verification in production)');
+    }
+
   } catch (error) {
     logger.error('Failed to create email transport', error);
   }
