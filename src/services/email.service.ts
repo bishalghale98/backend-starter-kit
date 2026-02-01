@@ -6,25 +6,38 @@ const isEmailConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
 
 let transporter: nodemailer.Transporter | null = null;
 
-if (isEmailConfigured) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+// Debug log to check env vars
+logger.info('Initializing Email Service', {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  user: process.env.SMTP_USER ? 'Set' : 'Not Set',
+  pass: process.env.SMTP_PASS ? 'Set' : 'Not Set',
+  isConfigured: !!isEmailConfigured
+});
 
-  // Verify transporter configuration
-  transporter.verify((error) => {
-    if (error) {
-      logger.warn('Email service not configured properly', error);
-    } else {
-      logger.success('Email service is ready');
-    }
-  });
+if (isEmailConfigured) {
+  try {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    // Verify transporter configuration
+    transporter.verify((error) => {
+      if (error) {
+        logger.error('Email service verification failed', error);
+      } else {
+        logger.success('Email service is ready');
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to create email transport', error);
+  }
 } else {
   logger.warn('Email service disabled - SMTP credentials not provided');
 }

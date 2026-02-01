@@ -42,3 +42,21 @@ export const authenticate = async (
         });
     }
 };
+
+/**
+ * Authorization middleware
+ * Restricts access to specific roles
+ * @param roles - Array of allowed roles
+ */
+export const authorize = (...roles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            res.status(403).json({
+                success: false,
+                message: 'Forbidden. Insufficient permissions.',
+            });
+            return;
+        }
+        next();
+    };
+};
