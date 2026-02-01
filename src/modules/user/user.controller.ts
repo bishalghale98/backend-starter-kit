@@ -101,10 +101,12 @@ export const login = catchError(async (req: Request, res: Response) => {
     // Set HTTP-only cookie for access token
     res.cookie('token', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        secure: true,              // MUST be true on HTTPS
+        sameSite: "none",          // REQUIRED for cross-site cookies
+        domain: ".dineshbudhathoki1.com.np", // share across subdomains
+        maxAge: 15 * 60 * 1000,
     });
+
 
     // Send response
     res.status(200).json({
