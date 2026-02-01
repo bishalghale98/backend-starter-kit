@@ -62,27 +62,21 @@ export const register = catchError(async (req: Request, res: Response) => {
 export const login = catchError(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    // Find user
+    // 1. Find user
     const user = await findUserByEmail(email);
     if (!user) {
-        res.status(401).json({
-            success: false,
-            message: 'Invalid email or password',
-        });
+        res.status(401).json({ message: "Invalid email or password" });
         return;
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-        res.status(401).json({
-            success: false,
-            message: 'Invalid email or password',
-        });
+    // 2. Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        res.status(401).json({ message: "Invalid email or password" });
         return;
     }
 
-    // Generate JWT tokens
+    // 3. Generate tokens
     const accessToken = generateToken({
         id: user.id,
         email: user.email,
@@ -95,23 +89,25 @@ export const login = catchError(async (req: Request, res: Response) => {
         role: user.role,
     });
 
-    // Store refresh token
+    // 4. Store refresh token in DB
     await storeRefreshToken(user.id, refreshToken);
 
-    // Set HTTP-only cookie for access token
-    res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: true,              // MUST be true on HTTPS
-        sameSite: "none",          // REQUIRED for cross-site cookies
+    /**
+     * 5. SET COOKIE
+     * domain allows subdomains (app + api)
+     */
+    res.cookie("accessToken", accessToken, {
+        httpOnly: true, // JS can't read it
+        secure: true, // HTTPS only
+        sameSite: "none", // cross-site allowed
         domain: ".dineshbudhathoki1.com.np", // share across subdomains
-        maxAge: 15 * 60 * 1000,
+        maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
-
-    // Send response
+    // 6. Send response (NO TOKEN IN BODY)
     res.status(200).json({
         success: true,
-        message: 'Login successful',
+        message: "Login successful",
         data: {
             id: user.id,
             name: user.name,
@@ -190,11 +186,20 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
  */
 export const logout = catchError(async (_req: Request, res: Response) => {
     // Clear cookie
-    res.clearCookie('token');
-    clearRefreshToken(_req.user?.id as string);
+    await clearRefreshToken(_req.user?.id as string);
+
+    /**
+     * MUST MATCH SAME OPTIONS AS res.cookie
+     */
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        domain: ".dineshbudhathoki1.com.np",
+    });
 
     res.status(200).json({
         success: true,
-        message: 'Logout successful',
+        message: "Logout successful",
     });
 });
