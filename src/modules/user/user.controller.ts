@@ -170,6 +170,7 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
         createdAt: user.createdAt,
     };
 
@@ -180,6 +181,7 @@ export const getProfile = catchError(async (req: Request, res: Response) => {
     res.setHeader('X-Cache', 'MISS');
     res.status(200).json({
         success: true,
+        message: 'User profile fetched successfully',
         data: userData,
     });
 });
