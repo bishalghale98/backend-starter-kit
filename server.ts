@@ -8,9 +8,7 @@ const startServer = async () => {
     try {
         // Connect to database
 
-        if (process.env.NODE_ENV !== 'production') {
             await connectDB();
-        }
 
         // Start Express server
         app.listen(env.PORT, () => {
