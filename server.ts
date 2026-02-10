@@ -7,7 +7,10 @@ import { connectDB } from './src/config/dbConnect';
 const startServer = async () => {
     try {
         // Connect to database
-        await connectDB();
+
+        if (process.env.NODE_ENV !== 'production') {
+            await connectDB();
+        }
 
         // Start Express server
         app.listen(env.PORT, () => {
