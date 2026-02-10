@@ -1,14 +1,12 @@
 import { env } from './src/config/env';
 import { logger } from './src/config/logger';
 import app from './src/app';
-import { connectDB } from './src/config/dbConnect';
 
 // Start server
 const startServer = async () => {
     try {
         // Connect to database
 
-            await connectDB();
 
         // Start Express server
         app.listen(env.PORT, () => {
