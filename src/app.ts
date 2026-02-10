@@ -79,12 +79,13 @@ app.get('/health', async (_req: Request, res: Response) => {
         // Check Redis connection
         const { redis } = await import('./config/redis');
         const redisStatus = redis.status === 'ready' ? 'connected' : 'disconnected';
-
+        const users = await prisma.user.findMany({ take: 1 })
 
         res.status(200).json({
             success: true,
             message: 'Server is running',
             timestamp: new Date().toISOString(),
+            users,
             services: {
                 database: 'connected',
                 redis: redisStatus,

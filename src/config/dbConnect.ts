@@ -4,16 +4,16 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 const adapter = new PrismaMariaDb(process.env.DATABASE_URL!)
 
 const globalForPrisma = global as unknown as {
-    prisma?: PrismaClient
+  prisma?: PrismaClient
 }
 
 export const prisma =
-    globalForPrisma.prisma ??
-    new PrismaClient({
-        adapter,
-        log: ['error'],
-    })
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    log: ['error'],
+  })
 
 if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.prisma = prisma
+  globalForPrisma.prisma = prisma
 }
