@@ -7,7 +7,7 @@ const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
 
 let prisma: PrismaClient
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'development') {
     prisma = new PrismaClient({ adapter })
 } else {
     const globalWithPrisma = global as unknown as { prisma: PrismaClient };

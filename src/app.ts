@@ -8,6 +8,7 @@ import { apiLimiter } from './middlewares/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import mainRouter from './routes';
 import { env } from './config/env';
+import { prisma } from './config/dbConnect';
 
 
 
@@ -78,6 +79,7 @@ app.get('/health', async (_req: Request, res: Response) => {
         // Check Redis connection
         const { redis } = await import('./config/redis');
         const redisStatus = redis.status === 'ready' ? 'connected' : 'disconnected';
+
 
         res.status(200).json({
             success: true,
