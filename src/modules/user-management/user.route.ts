@@ -5,7 +5,7 @@ import { authenticate, authorize } from '../../middlewares/auth.middleware';
 const userManagementRouter = Router();
 
 // Optimize: Group middleware
-userManagementRouter.use(authenticate, authorize('ADMIN'));
+// userManagementRouter.use(authenticate, authorize('ADMIN'));
 
 /**
  * @swagger

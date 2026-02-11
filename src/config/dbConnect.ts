@@ -1,54 +1,37 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { logger } from './logger';
-import dns from 'dns';
 
-// Force IPv4 preference for all DNS lookups
-dns.setDefaultResultOrder('ipv4first');
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
 
-// Create PostgreSQL connection pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production'
-        ? { rejectUnauthorized: false }
-        : undefined,
-    connectionTimeoutMillis: 10000, // 10 seconds
-    idleTimeoutMillis: 30000, // 30 seconds
-    max: 10, // Maximum pool size
-    min: 2, // Minimum pool size
-});
 
-// Create Prisma adapter
-const adapter = new PrismaPg(pool);
+let prisma: PrismaClient
 
-// Singleton pattern for Prisma Client
-// Prevents multiple instances in development with hot reload
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-export const prisma =
-    globalForPrisma.prisma ||
-    new PrismaClient({
+if (process.env.NODE_ENV === 'production') {
+    prisma = new PrismaClient({ adapter })
+} else {
+    const globalWithPrisma = global as unknown as { prisma: PrismaClient };
+    globalWithPrisma.prisma = new PrismaClient({
         adapter,
-        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    });
-
-if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.prisma = prisma;
+        log: ['query', 'info', 'warn', 'error'],
+    })
+    prisma = globalWithPrisma.prisma
 }
 
-// Database connection function
+export { prisma }
+
+// Connect helper
 export const connectDB = async (): Promise<void> => {
     try {
         await prisma.$connect();
-        logger.success('Database connected successfully');
+        logger.success('✅ Database connected successfully');
     } catch (error) {
-        logger.error('Database connection failed', error);
+        logger.error('❌ Database connection failed', error);
         process.exit(1);
     }
 };
 
 // Graceful shutdown
-process.on('beforeExit', async () => {
-    await prisma.$disconnect();
-});
+process.on('beforeExit', async () => await prisma.$disconnect());
+process.on('SIGINT', async () => { await prisma.$disconnect(); process.exit(0); });
+process.on('SIGTERM', async () => { await prisma.$disconnect(); process.exit(0); });
