@@ -75,33 +75,35 @@ setupSwagger(app);
  */
 // Health check route
 app.get('/health', async (_req: Request, res: Response) => {
-    try {
-        // Check Redis connection
-        const { redis } = await import('./config/redis');
-        const redisStatus = redis.status === 'ready' ? 'connected' : 'disconnected';
-        const users = await prisma.user.findMany({ take: 1 })
+    let redisStatus = 'not configured';
+    let databaseStatus = 'disconnected';
 
-        res.status(200).json({
-            success: true,
-            message: 'Server is running',
-            timestamp: new Date().toISOString(),
-            users,
-            services: {
-                database: 'connected',
-                redis: redisStatus,
-            },
-        });
-    } catch (error) {
-        res.status(200).json({
-            success: true,
-            message: 'Server is running',
-            timestamp: new Date().toISOString(),
-            services: {
-                database: 'connected',
-                redis: 'not configured',
-            },
-        });
+    try {
+        const { redis } = await import('./config/redis');
+        redisStatus = redis.status === 'ready' ? 'connected' : 'disconnected';
+    } catch (err) {
+        console.error('Redis health check failed:', err);
     }
+
+    try {
+        await prisma.user.findMany({ take: 1 });
+        databaseStatus = 'connected';
+    } catch (err) {
+        console.error('Database health check failed:', err);
+    }
+
+    const isHealthy =
+        redisStatus === 'connected' && databaseStatus === 'connected';
+
+    res.status(isHealthy ? 200 : 503).json({
+        success: isHealthy,
+        message: isHealthy ? 'Server is healthy' : 'Server has issues',
+        timestamp: new Date().toISOString(),
+        services: {
+            database: databaseStatus,
+            redis: redisStatus,
+        },
+    });
 });
 
 // API routes - Base path: /api/v1
